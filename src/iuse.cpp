@@ -41,7 +41,6 @@ static bool use_fire(player *p, item *it)
 static bool item_inscription( player *p, item *cut, std::string verb, std::string gerund,
                               bool carveable)
 {
-    (void)p; //unused
     if (!cut->made_of(SOLID)) {
         std::string lower_verb = verb;
         std::transform(lower_verb.begin(), lower_verb.end(), lower_verb.begin(), ::tolower);
@@ -70,7 +69,7 @@ static bool item_inscription( player *p, item *cut, std::string verb, std::strin
     bool hasnote = (ent != cut->item_vars.end());
     std::string message = "";
     std::string messageprefix = string_format( hasnote ? _("(To delete, input one '.')\n") : "" ) +
-                                string_format(_("%1$s on this %2$s is a note saying: "),
+                                string_format(_("%1$s on the %2$s is: "),
                                               gerund.c_str(), cut->type->name.c_str() );
     message = string_input_popup(string_format(_("%s what?"), verb.c_str()), 64,
                                  (hasnote ? cut->item_vars["item_note"] : message ),
@@ -7155,7 +7154,8 @@ int iuse::artifact(player *p, item *it, bool)
 
 int iuse::spray_can(player *p, item *it, bool)
 {
-    if ( it->type->id ==  _("permanent_marker")  )
+    bool ismarker = (it->type->id==_("permanent_marker") );
+    if ( ismarker )
     {
         int ret=menu(true, _("Write on what?"), _("The ground"), _("An item"), _("Cancel"), NULL );
 
@@ -7175,16 +7175,12 @@ int iuse::spray_can(player *p, item *it, bool)
         }
     }
 
-    bool ismarker = (it->type->id=="permanent_marker");
-
     std::string message = string_input_popup(ismarker?_("Write what?"):_("Spray what?"),
                                              0, "", "", "graffiti");
 
     if(message.empty()) {
         return 0;
-    }
-    else
-    {
+    } else {
         if(g->m.add_graffiti(p->posx, p->posy, message))
         {
             g->add_msg(
@@ -7192,9 +7188,8 @@ int iuse::spray_can(player *p, item *it, bool)
                 _("You write a message on the ground.") :
                 _("You spray a message on the ground.")
             );
-        }
-        else
-        {
+            p->moves -= 2 * message.length();
+        } else {
             g->add_msg(
                 ismarker?
                 _("You fail to write a message here.") :
